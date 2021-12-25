@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import './App.scss';
 import Container from './components/Container/Container';
@@ -6,81 +6,65 @@ import Section from './components/Section/Section';
 import ContactsList from './components/ContactsList/ContactsList';
 import ContactsForm from './components/ContactsForm/ContactsForm';
 import Filter from './components/Filter/Filter';
-import earlyAddContacts from '../src/data/contacts.json';
+import earlyAddedContacts from '../src/data/contacts.json';
 
-export default class App extends Component {
-   static defaultProps = {
-      contacts: earlyAddContacts,
-      filter: '',
-   };
+export default function App(props) {
+   const [contacts, setContacts] = useState(props.contacts);
+   const [filter, setFilter] = useState(props.filter);
 
-   state = {
-      contacts: this.props.contacts,
-      filter: this.props.filter,
-   };
+   useEffect(() => {
+      const parsedContacts = JSON.parse(localStorage.getItem('contacts'));
+      parsedContacts && setContacts(parsedContacts);
+   }, []);
 
-   componentDidUpdate(prevState) {
-      if (this.state.contacts !== prevState.contacts) {
-         localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-      }
-   }
+   useEffect(() => {
+      localStorage.setItem('contacts', JSON.stringify(contacts));
+   }, [contacts]);
 
-   componentDidMount() {
-      const contacts = JSON.parse(localStorage.getItem('contacts'));
-      contacts && this.setState({ contacts });
-   }
-
-   addContact = ({ name, number }) => {
-      this.state.contacts.some(contact => name === contact.name)
+   const addContact = ({ name, number }) =>
+      contacts.some(contact => name === contact.name)
          ? alert(`${name} is already in contacts`)
-         : this.setState(({ contacts }) => ({
-              contacts: [...contacts, { name, number, id: nanoid() }],
-           }));
-   };
+         : setContacts(prevState => [
+              ...prevState,
+              { id: nanoid(5), name, number },
+           ]);
 
-   deleteContact = contactId => {
-      this.setState(prevState => ({
-         contacts: prevState.contacts.filter(
-            contact => contact.id !== contactId,
-         ),
-      }));
-   };
-
-   findByName = ({ currentTarget }) => {
-      this.setState({
-         filter: currentTarget.value,
-      });
-   };
-
-   filterList = () => {
-      const { contacts, filter } = this.state;
-      const filteredItems = filter.toLowerCase();
-
-      return contacts.filter(contact =>
-         contact.name.toLowerCase().includes(filteredItems),
+   const deleteContact = contactId =>
+      setContacts(prevState =>
+         prevState.filter(contact => contact.id !== contactId),
       );
-   };
 
-   render() {
-      const { filter } = this.state;
-      const { addContact, findByName, filterList, deleteContact } = this;
-      return (
-         <main className="App">
-            <Container>
-               <Section>
-                  <h1 className="app-title">Phonebook</h1>
-                  <ContactsForm addContactHandler={addContact} />
-               </Section>
-               <Section>
-                  <h2 className="app-title">Contacts</h2>
-                  <Filter contactName={filter} findByNameHandler={findByName} />
-                  <ContactsList
-                     contacts={filterList()}
-                     deleteContactHandler={deleteContact}
-                  />
-               </Section>
-            </Container>
-         </main>
+   const findContactByName = event => setFilter(event.currentTarget.value);
+
+   const filterContactsList = () =>
+      contacts.filter(contact =>
+         contact.name.toLowerCase().includes(filter.toLowerCase()),
       );
-   }
+
+   return (
+      <main className="App">
+         <Container>
+            <Section>
+               <h1 className="app-title">Phonebook</h1>
+               <ContactsForm addContactHandler={addContact} />
+            </Section>
+            <Section>
+               <h2 className="app-title">Contacts</h2>
+               <Filter
+                  contactName={filter}
+                  findContactHandler={findContactByName}
+               />
+               <ContactsList
+                  contacts={filterContactsList()}
+                  deleteContactHandler={deleteContact}
+               />
+            </Section>
+         </Container>
+      </main>
+   );
 }
+
+App.defaultProps = {
+   contacts: earlyAddedContacts,
+   filter: '',
+};

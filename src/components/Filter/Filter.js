@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import style from './Filter.module.scss';
 
-export default function Filter({ contactName, findByNameHandler }) {
+export default function Filter({ contactName, findContactHandler }) {
    return (
       <div className={style.filter__container}>
          <input
@@ -10,7 +10,7 @@ export default function Filter({ contactName, findByNameHandler }) {
             id="input"
             type="text"
             value={contactName}
-            onChange={findByNameHandler}
+            onChange={findContactHandler}
             placeholder=" "
          />
          <div className={style.cut}></div>
@@ -23,5 +23,5 @@ export default function Filter({ contactName, findByNameHandler }) {
 
 Filter.propTypes = {
    contactName: PropTypes.string.isRequired,
-   findByNameHandler: PropTypes.func.isRequired,
+   findContactHandler: PropTypes.func.isRequired,
 };
